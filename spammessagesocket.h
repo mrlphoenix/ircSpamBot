@@ -10,6 +10,7 @@
 class SpamMessageSocket : public AbstractIrcSocket
 {
     Q_OBJECT
+    //min and max count of words in spam message
     int minWords_, maxWords_;
 public:
     explicit SpamMessageSocket(QObject *parent = 0);

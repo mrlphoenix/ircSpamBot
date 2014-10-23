@@ -18,8 +18,12 @@ SpamMessageSocket::SpamMessageSocket(QString host, QString channel, QString nick
 
 void SpamMessageSocket::sendMessage()
 {
+    //message prefix
     QString out = "PRIVMSG #" + channel_ + " :";
+    //calculating words count: random between minWords_ and maxWords_
     int wordsCount = (qrand()%(maxWords_-minWords_+1))+minWords_;
+    //picking up $wordsCount words from words_ list
+    //and writing it into socket
     for (int i=0; i<wordsCount; i++)
     {
         out += words_->at(qrand()%words_->count());
@@ -32,10 +36,14 @@ void SpamMessageSocket::sendMessage()
 
 void SpamMessageSocket::parseMessage()
 {
-    QString readLine = socket->readLine();
-    if (readLine.indexOf("PING ")!=-1)
+    while(socket->canReadLine())
     {
-        readLine[1] = QChar('O');
-        socket->write(readLine.toUtf8());
+        QString readLine = socket->readLine();
+        //answering a PING command
+        if (readLine.indexOf("PING ")!=-1)
+        {
+            readLine[1] = QChar('O');
+            socket->write(readLine.toUtf8());
+        }
     }
 }

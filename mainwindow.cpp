@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->spamLabel->setVisible(false);
 }
 
 MainWindow::~MainWindow()
@@ -29,7 +30,7 @@ void MainWindow::spamState()
 {
     ui->grabLabel->setEnabled(false);
     ui->messagesPB->setEnabled(false);
-    ui->spamLabel->setEnabled(true);
+    ui->spamLabel->setVisible(true);
 }
 
 void MainWindow::messageGrabbed()

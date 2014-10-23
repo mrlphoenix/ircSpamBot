@@ -11,19 +11,6 @@ void AbstractIrcSocket::login()
     socket->write(nickStr.toUtf8());
     socket->write(userStr.toUtf8());
     socket->write(joinStr.toUtf8());
-    /*
-    ircSocket->Socket->SendText("PASS "+cfg.Get("pass")+"\r\n");
-    Sleep(uint(100));
-    ircSocket->Socket->SendText("NICK "+cfg.Get("nick")+"\r\n");
-    Sleep(uint(100));
-
-    String sysName = String(" ") + cfg.Get("nick").LowerCase()+"."+cfg.Get("server");
-
-    ircSocket->Socket->SendText("USER " + cfg.Get("nick") + sysName + sysName + " :NotherKappa Bot\r\n");
-    Sleep(uint(100));
-    ircSocket->Socket->SendText("JOIN #" + cfg.Get("channel") + "\r\n");
-    Sleep(uint(100));
-    */
 }
 
 AbstractIrcSocket::AbstractIrcSocket(QObject *parent) :
@@ -41,7 +28,10 @@ AbstractIrcSocket::AbstractIrcSocket(QString host, QString channel, QString nick
     pass_ = pass;
     words_ = words;
     socket = new QTcpSocket(this);
+    //connecting "connected" signal from internal socket to "connected" slot
     connect(socket,SIGNAL(connected()),SLOT(connected()));
+    //connecting "readyRead" signal from internal socket to "parseMessage" slot
+    //"readyRead" emitted every time socket got some data from server
     connect(socket,SIGNAL(readyRead()),SLOT(parseMessage()));
 }
 
@@ -49,6 +39,7 @@ void AbstractIrcSocket::connectToHost() const
 {
     if (!socket)
         return;
+    //IRC protocol port = 6667
     socket->connectToHost(server_,6667);
 }
 

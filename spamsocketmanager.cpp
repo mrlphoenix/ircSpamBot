@@ -12,6 +12,17 @@ void SpamSocketManager::loadAccounts(QString filename)
 
     QTextStream textStream(&textFile);
     bool oddLine = false;
+
+    //Reading file with accounts
+    //file format:
+    //login
+    //pass
+    //login
+    //pass
+    //...
+    //login
+    //pass
+
     while (true)
     {
         QString line = textStream.readLine();
@@ -39,16 +50,19 @@ void SpamSocketManager::loadAccounts(QString filename)
 void SpamSocketManager::createSockets()
 {
     int count = accounts.count();
+    //choosing random acc in accounts list for listening
+    //and removing it from account list
     int randomListenerIndex = rand()%count;
     accountDescriptor grabberAccount = accounts.at(randomListenerIndex);
     accounts.removeAt(randomListenerIndex);
+    //creating N-1 spambots sockets
     foreach (const accountDescriptor& d, accounts)
     {
         SpamMessageSocket * sock = new SpamMessageSocket(server_,channel_,d.login,d.pass,&words_,minWords_,maxWords_);
         spamSockets.append(sock);
         spambots_.append(d.login.toLower());
     }
-
+    //creating listening socket
     grabSocket = new GrabMessageIrcSocket(server_,channel_,grabberAccount.login,grabberAccount.pass,
                                           &words_, &spambots_, out_);
 }
@@ -79,14 +93,18 @@ SpamSocketManager::SpamSocketManager(QString server, QString channel, QString ac
 
 void SpamSocketManager::start()
 {
+    //connecting signal and slots for spambots
+    //and connecting them to IRC server
     foreach (const SpamMessageSocket* ss, spamSockets)
     {
         connect(ss,SIGNAL(connectSignal()), SLOT(socketConnected()));
         ss->connectToHost();
     }
+    //connecting signals and slots for listening sock and connecting it to the server
     connect(grabSocket, SIGNAL(connectSignal()), SLOT(socketConnected()));
     grabSocket->connectToHost();
     botsCount = spambots_.count() + 1;
+    //emit signal "connecting state"
     emit connectingState(botsCount);
 }
 
@@ -94,6 +112,7 @@ void SpamSocketManager::socketConnected()
 {
     socketConnectedCount++;
     emit socketConnectedSignal();
+    //when all sockets is connected - start grabbing state
     if (socketConnectedCount == botsCount)
     {
         state = GRABBING_MESSAGES_STATE;
@@ -110,11 +129,14 @@ void SpamSocketManager::wordAdded()
         return;
     if (currentMessages_ < maxMessages_)
         emit messageGrabbed();
+    //when count of grabbed words is enough - start spamming state
     else if (currentMessages_ == maxMessages_)
     {
         emit messageGrabbed();
         emit spammingState();
         spamTimer = new QTimer();
+        //connect spam timer with spam() slot
+        //timer timeout time depends on globalCD and count of bots
         connect(spamTimer,SIGNAL(timeout()),SLOT(spam()));
         spamTimer->start(globalCD_/spambots_.count());
     }
@@ -122,6 +144,8 @@ void SpamSocketManager::wordAdded()
 
 void SpamSocketManager::spam()
 {
+    //send message with current spam socket
     spamSockets.at(currentSpamSocket)->sendMessage();
+    //choose next spam socket
     currentSpamSocket = (currentSpamSocket+1)%spambots_.count();
 }

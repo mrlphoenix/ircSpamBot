@@ -10,7 +10,10 @@
 class GrabMessageIrcSocket : public AbstractIrcSocket
 {
     Q_OBJECT
+    //textEdit widget where listening bot will type incoming chat messages
+    //can be NULL_PTR
     QTextEdit * textEdit_;
+    //list of spambots nicknames
     QStringList * spambots_;
 
 public:
